@@ -16,6 +16,7 @@
     }, true)
   </script>
   <script type="module" src="./theme.js"></script>
+  <script type="module" src="./credentials.js"></script>
   <script type="module" src="./app.js"></script>
   <script type="module" src="./chat.js"></script>
 </head>
@@ -178,8 +179,18 @@
     <form method="dialog" class="dialog-heading"><h2 id="settings-title">设置</h2><button aria-label="关闭设置">×</button></form>
     <section class="settings-section" aria-labelledby="settings-model-title">
       <h3 id="settings-model-title">模型</h3>
-      <label class="model">目标模型 <select id="model"><option value="">未指定（默认 deepseek-flash）</option><option>deepseek-flash</option><option>deepseek-v4-pro</option></select></label>
-      <div class="edit-actions"><button id="model-custom" type="button">自定义模型名…</button></div>
+      <p class="settings-hint" id="api-state">还没有填 API Key。填好之后才能开始对话。</p>
+      <label class="model" for="api-endpoint">API 地址</label>
+      <input id="api-endpoint" type="url" autocomplete="off" spellcheck="false" placeholder="https://api.deepseek.com/v1/chat/completions">
+      <label class="model" for="api-key">API Key</label>
+      <input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="sk-…">
+      <label class="model">目标模型 <select id="model"><option value="">未指定（默认 deepseek-chat）</option><option>deepseek-chat</option><option>deepseek-reasoner</option></select></label>
+      <div class="edit-actions">
+        <button id="api-test" type="button">测试连接</button>
+        <button id="model-custom" type="button">自定义模型名…</button>
+        <button id="api-clear" type="button">清除本机凭据</button>
+      </div>
+      <p class="settings-hint">Key 只存在这台设备的浏览器里：服务端不保存、不读取环境变量，也不扫描本机任何凭据文件。换浏览器或清缓存后需要重新填。</p>
     </section>
     <section class="settings-section" aria-labelledby="settings-theme-title">
       <h3 id="settings-theme-title">外观</h3>

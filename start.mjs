@@ -1,13 +1,12 @@
 import { spawn } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { createServer } from 'node:http'
-import { homedir, networkInterfaces } from 'node:os'
-import { join } from 'node:path'
+import { networkInterfaces } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { checkStaticRoutes } from './lib/static-check.mjs'
 import { createSharedSaves, SaveSlotError } from './lib/shared-saves.mjs'
 
-const port = 18769
+const port = Number(process.env.PORT) || 18769
 const host = '127.0.0.1'
 const url = 'http://' + host + ':' + port + '/'
 const sharedSaves = createSharedSaves(fileURLToPath(new URL('./data/shared-saves/', import.meta.url)))
@@ -18,6 +17,7 @@ const files = new Map([
   ['/app.js', ['app.js', 'text/javascript']],
   ['/theme.js', ['theme.js', 'text/javascript']],
   ['/chat.js', ['chat.js', 'text/javascript']],
+  ['/credentials.js', ['credentials.js', 'text/javascript']],
   ['/compiler.mjs', ['compiler.mjs', 'text/javascript']],
   ['/lib/choices.mjs', ['lib/choices.mjs', 'text/javascript']],
   ['/lib/context.mjs', ['lib/context.mjs', 'text/javascript']],
@@ -27,24 +27,39 @@ const files = new Map([
   ['/chat.css', ['chat.css', 'text/css']]
 ])
 
-// ---------- API key ----------
+// ---------- 模型凭据：服务端一律不持有 ----------
+//
+// 这里刻意不读任何本机凭据：不读环境变量、不读 ~/.dsh、不读 .env、不扫盘。
+// 程序启动后不会主动去找 key，也不会因为找不到而失败——它只在你按下发送时，
+// 把浏览器里那份 key 原样转给上游。
+//
+// 谁持有：玩家自己的浏览器（localStorage，仅这台设备）。
+// 服务端只做一件事：把 Authorization 和 x-model-endpoint 两个请求头转发出去，用完即弃。
+// 因此换台机器、换个浏览器，都需要重新填一次——这是设计，不是缺陷。
 
-let apiKey = null
+const DEFAULT_ENDPOINT = 'https://api.deepseek.com/v1/chat/completions'
 
-async function loadApiKey() {
-  if (process.env.DEEPSEEK_API_KEY) return process.env.DEEPSEEK_API_KEY
-  const candidates = [
-    join(homedir(), '.dsh', '.credentials.yaml'),
-    join(process.cwd(), '.deepseek-key')
-  ]
-  for (const path of candidates) {
-    try {
-      const text = await readFile(path, 'utf8')
-      const found = text.match(/sk-[A-Za-z0-9]{20,}/)
-      if (found) return found[0]
-    } catch {}
+// 只接受 http(s) 绝对地址，挡住 file: / 无协议 / 空值。
+function resolveEndpoint(raw) {
+  const text = typeof raw === 'string' ? raw.trim() : ''
+  if (!text) return DEFAULT_ENDPOINT
+  let parsed
+  try {
+    parsed = new URL(text)
+  } catch {
+    return null
   }
-  return null
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null
+  return parsed.toString()
+}
+
+// DeepSeek 的这个字段别的家不认，只对自家端点带上。
+function isDeepSeekEndpoint(endpoint) {
+  try {
+    return new URL(endpoint).hostname.endsWith('deepseek.com')
+  } catch {
+    return false
+  }
 }
 
 // ---------- helpers ----------
@@ -101,10 +116,19 @@ async function handleSaveSlots(request, response, path) {
 // 响应：纯文本流。上游的 reasoning_content 已被丢弃，只转发正文。
 
 async function handleChat(request, response) {
+  // 凭据只从这一条请求里来：浏览器带上来的 Authorization 头。
+  // 服务端不缓存、不落盘、不读本机任何文件；请求结束即丢。
+  const authorization = request.headers.authorization || ''
+  const apiKey = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : ''
   if (!apiKey) {
-    return json(response, 500, {
-      error: '没有找到 DeepSeek API Key。设置环境变量 DEEPSEEK_API_KEY，或确认 ' + join(homedir(), '.dsh', '.credentials.yaml') + ' 里有 sk- 开头的 key。'
+    return json(response, 401, {
+      error: '没有 API Key。点右上角 ⚙ 打开设置，把 key 填进去——它只存在你自己的浏览器里。'
     })
+  }
+
+  const endpoint = resolveEndpoint(request.headers['x-model-endpoint'])
+  if (!endpoint) {
+    return json(response, 400, { error: 'API 地址无效，需要 http:// 或 https:// 开头的完整地址。' })
   }
 
   let payload
@@ -130,13 +154,16 @@ async function handleChat(request, response) {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 180000)
 
+  const upstreamBody = { model, messages, max_tokens: maxTokens, stream: true }
+  if (isDeepSeekEndpoint(endpoint)) upstreamBody.effort = 'low'
+
   let upstream
   try {
-    upstream = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    upstream = await fetch(endpoint, {
       method: 'POST',
       signal: controller.signal,
       headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model, messages, max_tokens: maxTokens, effort: 'low', stream: true })
+      body: JSON.stringify(upstreamBody)
     })
   } catch (error) {
     clearTimeout(timer)
@@ -229,7 +256,7 @@ const server = createServer(async (request, response) => {
   }
 
   if (path === '/api/health') {
-    return json(response, 200, { ok: true, hasKey: Boolean(apiKey) })
+    return json(response, 200, { ok: true })
   }
 
   if (!['GET', 'HEAD'].includes(request.method)) {
@@ -257,15 +284,13 @@ server.on('error', error => {
   process.exitCode = 1
 })
 
-apiKey = await loadApiKey()
-
 // 绑 0.0.0.0：手机（同一 Wi-Fi）要能从局域网进来；只绑 127.0.0.1 时外部连不上。
 server.listen(port, '0.0.0.0', async () => {
   console.log('角色剧本卡片编辑器 + 对话 ' + url)
   const lan = Object.values(networkInterfaces()).flat()
     .find(item => item && item.family === 'IPv4' && !item.internal)?.address
   if (lan) console.log('手机（同一 Wi-Fi）→ http://' + lan + ':' + port + '/')
-  console.log(apiKey ? '模型通道：已就绪（' + apiKey.slice(0, 10) + '…）' : '模型通道：缺少 API Key —— 对话功能不可用')
+  console.log('模型通道：由浏览器填入（服务端不读取任何本机凭据）')
   const routeWarnings = await checkStaticRoutes(files, file => readFile(new URL('./' + file, import.meta.url), 'utf8'))
   for (const warning of routeWarnings) console.warn('[路由自检] ' + warning)
   if (process.argv.includes('--no-open')) return

@@ -2,6 +2,7 @@ import { completePrismReply, customRequest, normalizeFanPlatforms, panelTitlesFr
 import { rosterWarnings } from './lib/roster.mjs'
 import { mergePanelStats, panelStatDrops, prismPanels, splitChoices, splitPrismTurn, withLedgerAffection } from './lib/choices.mjs'
 import { installedStoryScripts, openingForPlay } from './app.js'
+import { DEFAULT_ENDPOINT, readCredentials } from './credentials.js'
 import { changeSharedSlot, getSharedSlot, listSharedSlots, getSaveSlot as getLocalSlot,
   listSaveSlots as listLocalSlots, saveSlotCount } from './lib/save-slots.mjs'
 
@@ -268,10 +269,18 @@ async function submit() {
 }
 
 async function requestTurn(messages, onProgress) {
+  const { key, endpoint, model } = readCredentials()
+  if (!key.trim()) {
+    throw new Error('还没有填 API Key。点右上角 ⚙，在「模型」里填好 key 再开始——它只存在你自己的浏览器里。')
+  }
   const response = await fetch('./api/chat', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages, maxTokens: 6000, model: document.getElementById('model')?.value || undefined })
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + key.trim(),
+      'x-model-endpoint': endpoint.trim() || DEFAULT_ENDPOINT
+    },
+    body: JSON.stringify({ messages, maxTokens: 6000, model: model || document.getElementById('model')?.value || undefined })
   })
   if (!response.ok) {
     const detail = await response.json().catch(() => ({ error: 'HTTP ' + response.status }))

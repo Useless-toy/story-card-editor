@@ -1,5 +1,6 @@
 import { compile, createDraft, customRequest, panelConfigOf, prismRequest, startLedger, validateRoutes, validateScript } from './compiler.mjs'
 import { splitChoices } from './lib/choices.mjs'
+import { DEFAULT_ENDPOINT, clearCredentials, maskKey, readCredentials, saveCredentials } from './credentials.js'
 
 const storageKey = 'story-card-editor.v1'
 const el = id => document.getElementById(id)
@@ -347,13 +348,118 @@ el('library').addEventListener('click', () => { if (script) showDrawer(false) })
 el('history').addEventListener('click', () => { if (script) showDrawer(true) })
 el('settings').addEventListener('click', () => {
   const panel = el('settings-dialog')
-  if (!panel.open) panel.showModal()
+  if (!panel.open) {
+    loadCredentialFields()
+    panel.showModal()
+  }
 })
+// ---------- 模型凭据：玩家自己填，只存在本机浏览器 ----------
+// 这里没有任何「自动获取」：不读环境变量、不读配置文件、不向后端要 key。
+// 打开设置看到的就是玩家自己上次填的东西，填完存在 localStorage。
+
+const currentModel = () => (draft?.selectedModel || readCredentials().model || '')
+
+function reflectCredentialState() {
+  const state = el('api-state')
+  if (!state) return
+  const { key, endpoint } = readCredentials()
+  if (key.trim()) {
+    state.textContent = '已填入 ' + maskKey(key) + '，发往 ' + (endpoint.trim() || DEFAULT_ENDPOINT) + '。'
+    state.dataset.state = 'ok'
+  } else {
+    state.textContent = '还没有填 API Key。填好之后才能开始对话。'
+    state.dataset.state = 'empty'
+  }
+}
+
+function loadCredentialFields() {
+  const { key, endpoint, model } = readCredentials()
+  const endpointInput = el('api-endpoint')
+  const keyInput = el('api-key')
+  if (endpointInput) endpointInput.value = endpoint
+  if (keyInput) keyInput.value = key
+  const modelSelect = el('model')
+  if (modelSelect && model) {
+    if (!Array.from(modelSelect.options).some(option => option.value === model)) {
+      const option = document.createElement('option')
+      option.value = model
+      option.textContent = model
+      modelSelect.append(option)
+    }
+    modelSelect.value = model
+  }
+  reflectCredentialState()
+}
+
+el('api-endpoint')?.addEventListener('blur', event => {
+  saveCredentials({ endpoint: event.target.value.trim() })
+  reflectCredentialState()
+})
+el('api-key')?.addEventListener('blur', event => {
+  saveCredentials({ key: event.target.value.trim() })
+  reflectCredentialState()
+})
+el('api-clear')?.addEventListener('click', () => {
+  clearCredentials()
+  loadCredentialFields()
+})
+el('api-test')?.addEventListener('click', async () => {
+  const button = el('api-test')
+  const state = el('api-state')
+  if (!button || !state) return
+  saveCredentials({
+    endpoint: el('api-endpoint')?.value.trim() || '',
+    key: el('api-key')?.value.trim() || ''
+  })
+  const { key, endpoint } = readCredentials()
+  if (!key.trim()) {
+    state.textContent = '先填 API Key 再测。'
+    state.dataset.state = 'empty'
+    return
+  }
+  button.disabled = true
+  state.textContent = '正在连接…'
+  try {
+    const response = await fetch('./api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + key.trim(),
+        'x-model-endpoint': endpoint.trim() || DEFAULT_ENDPOINT
+      },
+      body: JSON.stringify({ messages: [{ role: 'user', content: 'ping' }], maxTokens: 8, model: currentModel() })
+    })
+    if (!response.ok) {
+      const detail = await response.json().catch(() => ({}))
+      state.textContent = '连接失败：' + (detail.error || ('HTTP ' + response.status))
+      state.dataset.state = 'error'
+      return
+    }
+    const reader = response.body?.getReader()
+    if (reader) {
+      await reader.read()
+      reader.cancel().catch(() => {})
+    }
+    state.textContent = '连接正常，可以开始对话了。'
+    state.dataset.state = 'ok'
+  } catch (error) {
+    state.textContent = '连不上：' + error.message
+    state.dataset.state = 'error'
+  } finally {
+    button.disabled = false
+  }
+})
+
 el('model-custom').addEventListener('click', () => {
-  if (!draft) return
-  const name = window.prompt('输入目标模型名称（会作为 model 参数发给上游）。留空用服务端默认 deepseek-flash。', draft.selectedModel)
+  const name = window.prompt('输入目标模型名称（会作为 model 参数发给上游）。留空则用 API 地址那边的默认模型。', draft?.selectedModel || readCredentials().model || '')
   if (name === null) return
-  draft.selectedModel = name.trim()
+  const value = name.trim()
+  saveCredentials({ model: value })
+  if (!draft) {
+    reflectCredentialState()
+    return
+  }
+  draft.selectedModel = value
   modelSelection()
   update()
 })
@@ -364,6 +470,7 @@ document.addEventListener('click', event => {
   closeSettings()
 }, true)
 el('model').addEventListener('change', event => {
+  saveCredentials({ model: event.target.value })
   if (!draft) return
   draft.selectedModel = event.target.value
   update()

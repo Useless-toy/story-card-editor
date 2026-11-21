@@ -78,12 +78,20 @@ node start.mjs --no-open  # 只启动服务
 
 ## 接上模型
 
-引擎自己不写正文，它把提示词交给你。要让界面里直接对话，需要一个 API key：
+引擎自己不写正文，它把提示词交给你。想让界面里直接对话，填上你自己的 API key：
 
-- **环境变量**（临时）：Windows `set DEEPSEEK_API_KEY=sk-...`，macOS / Linux `export DEEPSEEK_API_KEY=sk-...`
-- **文件**（长期）：在项目根新建 `.deepseek-key`，整份文件只写一行 `sk-...`
+1. 启动后点右上角 **⚙**
+2. 在「模型」里填三样：
+   - **API 地址** — 默认 `https://api.deepseek.com/v1/chat/completions`；换供应商就填它的兼容地址（OpenAI、Groq、任何 OpenAI 兼容端点）
+   - **API Key** — 你自己的 key
+   - **目标模型** — `deepseek-chat` / `deepseek-reasoner`，或点「自定义模型名…」手填
+3. 点「测试连接」，看到「连接正常」就能开始
 
-`.deepseek-key` 已列进 `.gitignore`，不会被提交。
+**key 存在哪：** 只存在这台设备的浏览器里（`localStorage`）。
+
+**服务端不持有它：** 不读环境变量、不读 `~/.dsh`、不读 `.env`、不扫盘找 `sk-` 开头的串。程序启动后不会主动去获取任何凭据，也不会因为找不到而失败——它只在你按下发送时，把这一次请求转给上游，用完即弃。
+
+换浏览器、换设备、清一次缓存，都要重新填。这是代价，也是它不会跟着仓库流出去的原因。
 
 **不给 key 也能用**：点「编译」，把右边那段提示词整段复制，贴进任何对话窗口——GPT、Claude、Gemini、Grok 都行。存档与面板照常工作，只是需要你手动粘贴。
 
