@@ -1,0 +1,373 @@
+{
+    "id":  "fixture-ledger",
+    "title":  "测试用账本剧本",
+    "subtitle":  "单元测试用骨架",
+    "hint":  "仅用于测试，不构成一个可玩的剧本。",
+    "setting":  {
+                    "place":  "测试场景",
+                    "duration":  "一月",
+                    "rule":  "# 测试用\n只用于账本与请求组装的单元测试，没有世界观与角色设定。\n"
+                },
+    "style":  {
+                  "scale":  "",
+                  "note":  ""
+              },
+    "roles":  [
+                  {
+                      "id":  "jiangrou",
+                      "name":  "姜柔",
+                      "profile":  "测试角色，无设定。",
+                      "stats":  [
+                                    {
+                                        "key":  "路人缘",
+                                        "default":  82
+                                    }
+                                ],
+                      "aliases":  [
+
+                                  ]
+                  },
+                  {
+                      "id":  "xuenfei",
+                      "name":  "许恩霏",
+                      "profile":  "测试角色，无设定。",
+                      "stats":  [
+                                    {
+                                        "key":  "路人缘",
+                                        "default":  88
+                                    }
+                                ],
+                      "aliases":  [
+
+                                  ]
+                  },
+                  {
+                      "id":  "luxingwan",
+                      "name":  "陆星晚",
+                      "profile":  "测试角色，无设定。",
+                      "stats":  [
+                                    {
+                                        "key":  "路人缘",
+                                        "default":  45
+                                    }
+                                ],
+                      "aliases":  [
+
+                                  ]
+                  },
+                  {
+                      "id":  "sunianqing",
+                      "name":  "苏念清",
+                      "profile":  "测试角色，无设定。",
+                      "stats":  [
+                                    {
+                                        "key":  "路人缘",
+                                        "default":  38
+                                    }
+                                ],
+                      "aliases":  [
+
+                                  ]
+                  },
+                  {
+                      "id":  "shenyilan",
+                      "name":  "沈以岚",
+                      "profile":  "测试角色，无设定。",
+                      "stats":  [
+                                    {
+                                        "key":  "路人缘",
+                                        "default":  52
+                                    }
+                                ],
+                      "aliases":  [
+
+                                  ]
+                  },
+                  {
+                      "id":  "bailusheng",
+                      "name":  "白鹿笙",
+                      "profile":  "测试角色，无设定。",
+                      "stats":  [
+                                    {
+                                        "key":  "路人缘",
+                                        "default":  15
+                                    }
+                                ],
+                      "aliases":  [
+
+                                  ]
+                  }
+              ],
+    "playerFields":  [
+                         {
+                             "key":  "name",
+                             "label":  "艺名",
+                             "type":  "text",
+                             "chips":  [
+                                           "林晚棠",
+                                           "顾燃",
+                                           "江糖",
+                                           "温以策",
+                                           "沈鹿眠"
+                                       ]
+                         },
+                         {
+                             "key":  "identity",
+                             "label":  "性别与称呼",
+                             "type":  "text",
+                             "chips":  [
+                                           "女"
+                                       ]
+                         },
+                         {
+                             "key":  "location",
+                             "label":  "所在城市",
+                             "type":  "text",
+                             "chips":  [
+                                           "首尔",
+                                           "北京",
+                                           "上海"
+                                       ]
+                         },
+                         {
+                             "key":  "appearance",
+                             "label":  "外貌描述",
+                             "type":  "textarea"
+                         },
+                         {
+                             "key":  "personality",
+                             "label":  "性格特点",
+                             "type":  "textarea"
+                         },
+                         {
+                             "key":  "perspective",
+                             "label":  "叙事人称",
+                             "type":  "text",
+                             "chips":  [
+                                           "第二人称",
+                                           "第一人称",
+                                           "第三人称"
+                                       ]
+                         },
+                         {
+                             "key":  "background",
+                             "label":  "背景故事",
+                             "type":  "textarea"
+                         }
+                     ],
+    "toggle":  {
+                   "label":  "可选叙事规则",
+                   "optionTitle":  "状态栏注明数值变动原因",
+                   "optionDesc":  "发生数值变动时，用一句话注明触发事件及传播途径。",
+                   "offText":  "无"
+               },
+    "routeVersion":  2,
+    "routes":  [
+                   {
+                       "id":  "briefing",
+                       "name":  "凌晨练习室 · 镜头被换",
+                       "recommended":  true,
+                       "scene":  "2024 年 11 月 14 日凌晨 1 点，首尔江南区，星陨娱乐练习楼三层 B 室。夜间多云，8°C。一盏灯坏了，你用手机给镜子补光，反复练习打歌舞台的副歌。隔壁传来姜柔和陆星晚合练的笑声。经纪人通知，11 月 15 日打歌舞台的结束特写改给苏念清，你的镜头调整为全景。你扣下手机，深吸一口气，站回镜子前。许恩霏可以带着热可可来到门口，等玩家回应。",
+                       "stats":  {
+                                     "jiangrou":  {
+                                                      "路人缘":  82
+                                                  },
+                                     "xuenfei":  {
+                                                     "路人缘":  88
+                                                 },
+                                     "luxingwan":  {
+                                                       "路人缘":  45
+                                                   },
+                                     "sunianqing":  {
+                                                        "路人缘":  38
+                                                    },
+                                     "shenyilan":  {
+                                                       "路人缘":  52
+                                                   },
+                                     "bailusheng":  {
+                                                        "路人缘":  15
+                                                    }
+                                 }
+                   },
+                   {
+                       "id":  "live-slot",
+                       "name":  "直播倒计时 · 临时空出的位置",
+                       "scene":  "2024 年 11 月 15 日傍晚，打歌节目的后台。距离直播还有十二分钟，原定的双人采访有一位嘉宾临时缺席，导演问 PRISM 能不能补人。苏念清手里有品牌方提前确认过的问答稿，陆星晚却指出其中一题会把团员引向镜头分配的争议。姜柔把备用话筒递到你手边，让你自己决定是否接下这个机会。采访还未播出，台下也没有听到这段商量。",
+                       "stats":  {
+                                     "jiangrou":  {
+                                                      "路人缘":  82
+                                                  },
+                                     "xuenfei":  {
+                                                     "路人缘":  88
+                                                 },
+                                     "luxingwan":  {
+                                                       "路人缘":  45
+                                                   },
+                                     "sunianqing":  {
+                                                        "路人缘":  38
+                                                    },
+                                     "shenyilan":  {
+                                                       "路人缘":  52
+                                                   },
+                                     "bailusheng":  {
+                                                        "路人缘":  15
+                                                    }
+                                 }
+                   },
+                   {
+                       "id":  "rough-cut",
+                       "name":  "深夜剪辑室 · 流出去的十五秒",
+                       "scene":  "2024 年 11 月 14 日深夜，星陨娱乐的剪辑室。许恩霏发来一个公开视频链接，十五秒的无声花絮里，沈以岚似乎把你拉出了镜头。评论已经有人追问原委，但完整片段显示那处地板刚有设备经过，没人知道短片从哪里来的。沈以岚想立刻解释，白鹿笙提醒你们，原片里还有一段未获公开授权的谈话。她们都等你先表态：找工作人员确认源头，还是先决定能公开回应到什么程度。",
+                       "stats":  {
+                                     "jiangrou":  {
+                                                      "路人缘":  82
+                                                  },
+                                     "xuenfei":  {
+                                                     "路人缘":  88
+                                                 },
+                                     "luxingwan":  {
+                                                       "路人缘":  45
+                                                   },
+                                     "sunianqing":  {
+                                                        "路人缘":  38
+                                                    },
+                                     "shenyilan":  {
+                                                       "路人缘":  52
+                                                   },
+                                     "bailusheng":  {
+                                                        "路人缘":  15
+                                                    }
+                                 }
+                   },
+                   {
+                       "id":  "custom",
+                       "name":  "随机生成开局",
+                       "custom":  true,
+                       "random":  true
+                   }
+               ],
+    "turnPanels":  "prism",
+    "prismStats":  {
+                       "members":  {
+                                       "姜柔":  {
+                                                  "popularity":  8500,
+                                                  "soloFans":  38000,
+                                                  "affection":  20
+                                              },
+                                       "许恩霏":  {
+                                                   "popularity":  6800,
+                                                   "soloFans":  29000,
+                                                   "affection":  20
+                                               },
+                                       "陆星晚":  {
+                                                   "popularity":  5200,
+                                                   "soloFans":  15000,
+                                                   "affection":  20
+                                               },
+                                       "苏念清":  {
+                                                   "popularity":  3800,
+                                                   "soloFans":  8000,
+                                                   "affection":  20
+                                               },
+                                       "沈以岚":  {
+                                                   "popularity":  3500,
+                                                   "soloFans":  7500,
+                                                   "affection":  20
+                                               },
+                                       "玩家":  {
+                                                  "popularity":  850,
+                                                  "soloFans":  1200,
+                                                  "passers":  12,
+                                                  "cpFans":  0,
+                                                  "affection":  20
+                                              },
+                                       "白鹿笙":  {
+                                                   "popularity":  600,
+                                                   "soloFans":  800,
+                                                   "affection":  20
+                                               }
+                                   },
+                       "pairs":  {
+                                     "柔晚":  {
+                                                "heat":  8200,
+                                                "fans":  45000
+                                            },
+                                     "清岚":  {
+                                                "heat":  6500,
+                                                "fans":  32000
+                                            }
+                                 }
+                   },
+    "fans":  [
+                 {
+                     "id":  "星晚的尾巴",
+                     "platform":  "微博",
+                     "camp":  "陆星晚唯粉",
+                     "stance":  "优先维护陆星晚的个人舞台，警惕别人蹭热度",
+                     "tone":  "反问和短句，爱放站姐截图"
+                 },
+                 {
+                     "id":  "柔晚永不沉没",
+                     "platform":  "CP超话",
+                     "camp":  "柔晚CP粉",
+                     "stance":  "关注姜柔和陆星晚，容易把搭档更换看成拆组合",
+                     "tone":  "常翻旧物料和逐帧截图"
+                 },
+                 {
+                     "id":  "糖分超标警告",
+                     "platform":  "小红书",
+                     "camp":  "多担CP粉",
+                     "stance":  "偏爱有化学反应的舞台搭档，遇到明确反证会调整判断",
+                     "tone":  "从观众体验出发，爱用短句和表情"
+                 },
+                 {
+                     "id":  "首尔追星日志",
+                     "platform":  "微博",
+                     "camp":  "站姐",
+                     "stance":  "只发布能核对的现场照片与时间地点",
+                     "tone":  "用现场时间、机位和照片编号说话"
+                 },
+                 {
+                     "id":  "路过的光谱",
+                     "platform":  "微博",
+                     "camp":  "团粉",
+                     "stance":  "希望各成员有机会，担心粉圈争执影响团体",
+                     "tone":  "温和劝架，常说别上升"
+                 },
+                 {
+                     "id":  "晚棠的锁骨我负责",
+                     "platform":  "B站",
+                     "camp":  "玩家唯粉",
+                     "stance":  "支持玩家，喜欢从舞台变化里找进步",
+                     "tone":  "标题有梗，擅长并排剪辑"
+                 },
+                 {
+                     "id":  "下班路过音放",
+                     "platform":  "小红书",
+                     "camp":  "路人",
+                     "stance":  "只看演出和现场体验，对团内关系兴趣不大",
+                     "tone":  "像写观演笔记，先说自己在哪排"
+                 },
+                 {
+                     "id":  "场灯第三排",
+                     "platform":  "抖音",
+                     "camp":  "直拍观众",
+                     "stance":  "更关心动作和镜头，愿意夸任何表现好的成员",
+                     "tone":  "短评，常报视频秒数"
+                 },
+                 {
+                     "id":  "热榜显微镜",
+                     "platform":  "微博",
+                     "camp":  "反对玩家的黑粉",
+                     "stance":  "习惯把玩家的新曝光解释成公司营销",
+                     "tone":  "尖刻，爱翻旧帖对比，但只引用公开物料"
+                 },
+                 {
+                     "id":  "清岚收音机",
+                     "platform":  "CP超话",
+                     "camp":  "清岚CP粉",
+                     "stance":  "关注苏念清和沈以岚的合作，反感别人拿她们踩其他成员",
+                     "tone":  "引用节目时间戳，常接楼回复"
+                 }
+             ]
+}

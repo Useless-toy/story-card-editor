@@ -1,0 +1,594 @@
+:root {
+  color-scheme: dark;
+  font: var(--ui-size, 16px)/1.65 var(--ui-font, system-ui, "Microsoft YaHei", sans-serif);
+  --base: #151416;
+  --panel: #201d20;
+  --raised: color-mix(in srgb, var(--panel), var(--text) 6%);
+  --line: color-mix(in srgb, var(--panel), var(--text) 22%);
+  --text: #f7eef1;
+  --muted: #c4b4bd;
+  --rose: #f5a8b2;
+  --red: #852e43;
+  color: var(--text);
+  background: var(--base);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; }
+button, input, textarea, select { font: inherit; color: inherit; }
+button, select, input:not([type=checkbox], [type=radio]), textarea {
+  border: 1px solid var(--line);
+  border-radius: calc(var(--ui-radius, 14px) * .65);
+  background: var(--raised);
+  padding: calc(.55rem * var(--ui-spacing, 1)) calc(.75rem * var(--ui-spacing, 1));
+}
+button { cursor: pointer; }
+button:hover { border-color: var(--rose); }
+:focus-visible { outline: 2px solid var(--rose); outline-offset: 3px; }
+textarea { resize: vertical; min-height: 4.5rem; }
+input[type=radio], input[type=checkbox] { accent-color: var(--rose); }
+h1, h2, p { margin-top: 0; }
+h1 { font-size: clamp(1.7rem, 5vw, 3rem); line-height: 1.15; margin-bottom: 1rem; }
+h2 { font-size: 1.18rem; margin-bottom: 1rem; }
+.toolbar { border-bottom: 1px solid var(--line); background: var(--panel); }
+.bar, main { width: min(100% - 2rem, var(--ui-width, 960px)); margin-inline: auto; }
+.bar, .bar-group { display: flex; align-items: center; gap: .65rem; }
+.bar { min-height: 4.2rem; justify-content: space-between; padding: .5rem 0; }
+.model { display: flex; align-items: center; gap: .45rem; color: var(--muted); }
+main { padding-block: 1rem 3rem; }
+.overview { padding: clamp(1.2rem, 5vw, 2.8rem); background: radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--rose) 24%, var(--panel)), transparent 65%), var(--panel); border: 1px solid var(--line); border-radius: calc(var(--ui-radius, 14px) * 1.3); }
+.overview p { max-width: 36rem; }
+.hint, .muted, small { color: var(--muted); }
+.hint { margin-bottom: 0; }
+.quick, .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.quick { margin-block: .8rem 1.2rem; }
+.quick button { text-align: left; min-height: 3.2rem; }
+.panel { padding: calc(clamp(1rem, 4vw, 1.6rem) * var(--ui-spacing, 1)); margin-bottom: 1rem; border: 1px solid var(--line); background: var(--panel); border-radius: var(--ui-radius, 14px); }
+h2 span { color: var(--rose); font-variant-numeric: tabular-nums; padding-right: .4rem; }
+.field label, #custom-label { display: grid; gap: .35rem; }
+.field label > :is(input, textarea, select) { width: 100%; min-width: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: .35rem; margin: .45rem 0 .7rem; }
+.chip { border-radius: 2rem; font-size: .82rem; padding: .22rem .55rem; }
+.special { display: flex; align-items: flex-start; gap: .65rem; border: 1px dashed var(--line); border-radius: .7rem; padding: .85rem; margin-top: 1rem; cursor: pointer; }
+.special small { display: block; }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.route { display: grid; grid-template-columns: auto 1fr; gap: .6rem; padding: .8rem; border: 1px solid var(--line); border-radius: calc(var(--ui-radius, 14px) * .75); margin-bottom: .6rem; cursor: pointer; }
+.route:has(:checked) { border-color: var(--rose); background: color-mix(in srgb, var(--rose) 12%, var(--panel)); }
+.route input { align-self: start; margin-top: .45rem; }
+.route p { margin: .35rem 0 0; color: var(--muted); }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; overflow-y: auto; max-height: 25rem; padding: 1rem; background: var(--base); border: 1px solid var(--line); border-radius: calc(var(--ui-radius, 14px) * .75); font: .87rem/1.7 ui-monospace, Consolas, monospace; }
+button.primary { background: var(--red); color: var(--button-ink, white); border-color: color-mix(in srgb, var(--red), var(--rose) 32%); font-weight: 700; }
+.preview .primary { width: 100%; }
+[role=status] { color: var(--rose); margin: .5rem 0 0; }
+[role=status]:empty { display: none; }
+dialog { width: min(calc(100% - 2rem), 36rem); max-height: 90dvh; padding: 1rem; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: var(--ui-radius, 14px); }
+dialog::backdrop { background: #08060aca; }
+dialog.drawer { margin: 0; height: 100dvh; max-height: none; width: min(22rem, 90vw); border-radius: 0 .8rem .8rem 0; }
+.dialog-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: .9rem; }
+.dialog-heading h2 { margin: 0; }
+#detail-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+#entries button, .drawer-actions button { display: block; width: 100%; margin-bottom: .55rem; text-align: left; }
+#entries button[aria-current=true] { border-color: var(--rose); }
+#entries small { display: block; }
+.drawer-actions { border-top: 1px solid var(--line); margin-top: 1rem; padding-top: 1rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media (max-width: 580px) {
+  .fields { grid-template-columns: 1fr; }
+  .bar { flex-wrap: wrap; }
+  .model { order: 1; width: 100%; }
+  .model select { flex: 1; min-width: 0; }
+}
+
+.quick-roles { display: grid; grid-column: 1 / -1; gap: .75rem; grid-template-columns: repeat(var(--columns), minmax(0, 1fr)); }
+.quick-roles[data-count="1"] { grid-template-columns: minmax(0, 1fr); width: min(100%, 26rem); justify-self: center; }
+.quick-roles button { text-align: center; }
+summary { cursor: pointer; font-weight: 700; }
+#world-form, #route-form, .stack { display: grid; gap: .65rem; }
+#world-form { margin-top: .8rem; }
+#world-form label { display: grid; gap: .3rem; }
+.edit-actions, .choices, .route-actions { display: flex; flex-wrap: wrap; gap: .45rem; }
+.route-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .5rem; align-items: start; margin-bottom: .6rem; }
+.route-item .route { margin: 0; }
+.route-actions button { font-size: .85rem; padding: .35rem .55rem; }
+button:disabled { opacity: .55; cursor: default; }
+#add-route, #custom-label { margin-top: .55rem; }
+#route-stats fieldset { margin-block: .45rem; }
+#route-stats details { margin-block: .45rem; padding: .6rem; border: 1px solid var(--border, #7775); border-radius: .6rem; }
+#route-stats details[hidden] { display: none; }
+#route-stats input[type="checkbox"] { width: auto; margin-inline-end: .4rem; }
+#route-stats label { display: inline-grid; gap: .25rem; margin: .2rem .5rem .2rem 0; }
+#route-stats input { width: 6rem; }
+.read-content { margin-block: .6rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.choice { text-align: left; }
+#choices, #next-input { margin-bottom: .6rem; }
+[role=alert] { color: var(--rose); }
+[role=alert]:empty { display: none; }
+@media (max-width: 580px) {
+  .route-item { grid-template-columns: 1fr; }
+  .quick-roles { grid-template-columns: repeat(var(--mobile-columns), minmax(0, 1fr)); }
+}
+
+
+
+/* Theme controls and shared page treatment */
+body {
+  min-height: 100vh;
+  background: radial-gradient(ellipse 48rem 30rem at 50% 0%, color-mix(in srgb, var(--rose) 13%, transparent), transparent 100%);
+}
+:root[data-texture="none"] body { background: none; }
+:root[data-texture="grid"] body {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--text) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--text) 4%, transparent) 1px, transparent 1px),
+    radial-gradient(ellipse 48rem 30rem at 50% 0%, color-mix(in srgb, var(--rose) 13%, transparent), transparent);
+  background-size: 32px 32px, 32px 32px, auto;
+}
+.toolbar {
+  background: color-mix(in srgb, var(--panel) 92%, var(--base));
+}
+.overview { position: relative; border-top: 2px solid var(--rose); overflow-wrap: anywhere; }
+.overview h1 { letter-spacing: -.025em; }
+.overview .hint {
+  display: inline-block;
+  padding: .48rem .7rem;
+  background: color-mix(in srgb, var(--base) 65%, transparent);
+  border-radius: calc(var(--ui-radius, 14px) * .6);
+}
+.panel, .overview, dialog { box-shadow: 0 8px 26px #00000016; }
+.panel { margin-bottom: calc(1rem * var(--ui-spacing, 1)); }
+button { transition: border-color .15s, background-color .15s; }
+button:hover:not(:disabled) { background: color-mix(in srgb, var(--raised), var(--rose) 10%); }
+button.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--red), var(--button-ink, white) 9%); }
+#theme-open { border-color: var(--rose); }
+#theme-dialog { width: min(calc(100% - 1.5rem), 43rem); }
+#theme-dialog::backdrop { background: #0005; }
+.theme-sample {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: .15rem .8rem;
+  align-items: center;
+  padding: .8rem;
+  margin-bottom: .9rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--rose);
+  border-radius: var(--ui-radius, 14px);
+  background: var(--raised);
+}
+.theme-sample small { grid-column: 1; }
+.theme-sample span {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  padding: .3rem .65rem;
+  border-radius: calc(var(--ui-radius, 14px) * .65);
+  background: var(--red);
+  color: var(--button-ink, white);
+}
+.theme-actions { display: flex; gap: .45rem; flex-wrap: wrap; }
+#theme-presets button::before {
+  content: "";
+  display: inline-block;
+  width: .65em;
+  height: .65em;
+  margin-right: .35em;
+  border-radius: 50%;
+  background: var(--sample);
+}
+#theme-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .55rem;
+  margin-block: 1rem;
+}
+#theme-controls label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: .35rem;
+  min-width: 0;
+  padding: .42rem .55rem;
+  border: 1px solid var(--line);
+  border-radius: calc(var(--ui-radius, 14px) * .6);
+  font-size: .85rem;
+}
+#theme-controls input[type="color"] { width: 2rem; height: 1.65rem; padding: .1rem; cursor: pointer; }
+#theme-controls input[type="range"] { width: clamp(3rem, 10vw, 6rem); accent-color: var(--rose); }
+#theme-controls select { padding: .2rem .35rem; max-width: 100%; }
+#theme-controls output { color: var(--muted); font-variant-numeric: tabular-nums; }
+#theme-controls output:empty { display: none; }
+@media (max-width: 530px) {
+  #theme-controls { grid-template-columns: 1fr; }
+  #theme-controls input[type="range"] { width: min(30vw, 8rem); }
+  .bar-group { gap: .35rem; }
+  .bar-group button { padding-inline: .5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  button { transition: none; }
+}
+
+/* 设置面板 —— 四个分区靠标题 + 分隔线区分，颜色一律取自 CSS 变量 */
+#settings-dialog { width: min(calc(100% - 1.5rem), 34rem); }
+.settings-section {
+  display: grid;
+  gap: .5rem;
+  padding-block: .85rem;
+  border-top: 1px solid var(--line);
+}
+.settings-section:first-of-type { border-top: 0; padding-top: 0; }
+.settings-section h3 {
+  margin: 0;
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  color: var(--muted);
+}
+.settings-section .edit-actions { gap: .5rem; }
+.settings-section .model { color: var(--muted); }
+.settings-section .model select { flex: 1; min-width: 0; }
+
+/* ── 手机端纵向压缩（≤640px）────────────────────────────────────────────────
+   整块只在 @media (max-width: 640px) 里生效，640px 以上一条都不命中：
+   电脑端的 .mobile-config 恒为 display:none，body 上的 is-playing / config-open
+   也只是没有样式对应的 class（由 chat.js 按 #chat-log 里的 .msg 推导，纯 UI）。
+   ① 已开局后配置区收起，顶部留一行可点开的摘要条；
+   ② 对话区独立滚动：#chat-log 自己滚，输入行靠 flex 留在底部。 */
+.mobile-config { display: none; }
+
+@media (max-width: 640px) {
+  /* ① 摘要条：只在「已开局」时出现，点它展开/收起配置区 */
+  body.is-playing .mobile-config {
+    display: block;
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--panel) 92%, var(--base));
+  }
+  .mobile-config button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .6rem;
+    width: min(100% - 2rem, var(--ui-width, 960px));
+    margin-inline: auto;
+    padding: .7rem 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    font-weight: 700;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+  .mobile-config button:hover { background: none; border-color: transparent; }
+  .mobile-config button:focus-visible { outline-offset: -2px; }
+  .mobile-config-caret { flex: none; color: var(--muted); transition: transform .15s; }
+  body.config-open .mobile-config-caret { transform: rotate(180deg); }
+  /* 展开时这行吸顶：翻完一屏配置能原地收起，不用一路滑回去 */
+  body.is-playing.config-open .mobile-config { position: sticky; top: 0; z-index: 1; }
+
+  /* 收起：只有「已开局且未展开」才隐藏配置区，点摘要条（body.config-open）即全量展开 */
+  body.is-playing:not(.config-open) #workspace > :not(.chat) { display: none; }
+
+  /* ② 整页不再整体滚动：改成「顶栏 / 摘要条 / 对话 / 输入行」的纵向 flex 壳 */
+  body.is-playing:not(.config-open) {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  body.is-playing:not(.config-open) .toolbar { flex: none; }
+  body.is-playing:not(.config-open) main {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding-block: 0;
+  }
+  body.is-playing:not(.config-open) #workspace {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  body.is-playing:not(.config-open) #workspace > .chat {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
+  }
+  /* 压缩模式里省掉「对话」标题与提示语，把高度让给正文 */
+  body.is-playing:not(.config-open) #workspace > .chat > h2,
+  body.is-playing:not(.config-open) #chat-hint { display: none; }
+
+  /* 正文：自己滚，占满剩余高度（覆盖 chat.css 的 max-height: 60vh） */
+  body.is-playing:not(.config-open) #chat-log {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    margin-bottom: .6rem;
+  }
+  /* 选项条：只占需要的高度，选项多了自己滚，不把正文挤没 */
+  body.is-playing:not(.config-open) #choices {
+    flex: 0 1 auto;
+    max-height: 35dvh;
+    overflow-y: auto;
+  }
+  /* 输入行：flex 里固定在最后一行，永不随正文滚走；不用 fixed，免得和键盘打架 */
+  body.is-playing:not(.config-open) .chat-input-row {
+    flex: none;
+    margin-bottom: .35rem;
+  }
+}
+
+/* ── ③ 面板段落默认折叠（≤640px）──────────────────────────────────────────────
+   对话气泡里的面板段落（PRISM 七段、自定义面板）在手机上默认只留标题行，
+   点标题行展开（chat.js 在 #chat-log 上做事件委托，切 .panel-section.is-open）。
+   全部规则都在 @media 里，640px 以上一条都不命中；电脑端的可见性照旧由
+   chat.css 的 .prism-panel-content { display: grid } 决定，那行没动过，
+   所以 640px 以上渲染出来的像素与改动前完全一致。 */
+@media (max-width: 640px) {
+  /* 标题行 = ▶ / ▼ + 标题，去掉原生三角，换成和「世界观设定」一致的可点标题 */
+  #chat-log details.panel-section > summary {
+    display: flex;
+    align-items: baseline;
+    gap: .45rem;
+    list-style: none;
+    cursor: pointer;
+  }
+  #chat-log details.panel-section > summary::-webkit-details-marker { display: none; }
+  #chat-log details.panel-section > summary::before {
+    content: "▶";
+    flex: none;
+    font-size: .78em;
+    line-height: 1;
+    color: var(--rose);
+  }
+  #chat-log details.panel-section.is-open > summary::before { content: "▼"; }
+
+  /* 折叠/展开只认 .is-open：未展开时内容是 display:none（盖掉 chat.css 的 display:grid） */
+  #chat-log details.panel-section > .prism-panel-content { display: none; }
+  #chat-log details.panel-section.is-open > .prism-panel-content { display: grid; }
+}
+
+/* ── ④ 手机端通栏：把外面那个「框」拆掉（≤640px）──────────────────────────────
+   只在 ≤640px 生效，640px 以上一条都不命中：.bar / main 仍然是
+   min(100% - 2rem, var(--ui-width, 960px))，#chat-log 仍然是 chat.css 的
+   padding: 1rem，.msg 仍然是 max-width: 88% —— 电脑端逐像素不变。
+   手机上把「容器让边 + 卡片内缩 + 气泡让边」三层缩进里的前两层拿掉：
+   ① main 占满视口宽度（原来左右各让 1rem）；
+   ② #chat-log 用负边距抵消掉对话卡片自己的左右 padding（原来左右各 16px，
+      按 4vw 走），滚动区拉成通栏，卡片里其它子块的内缩不变；
+   ③ #chat-log 左右内边距收到 9px，左右框线与圆角去掉（不留断角）；
+   ④ .msg 的 max-width 从 88% 放到 100%。
+   气泡自己的圆角（var(--ui-radius)）与内边距（.7rem .9rem）沿用 chat.css，
+   一个字没动。390px 视口下：#chat-log 内容宽 370px（改前 292px），
+   长句气泡 370px 宽（改前 255px），正文左右各让约 24px（改前各约 50px）。
+   配置区其它区块补回 1rem 内缩（宽度与改动前完全一致），只有对话区通栏。 */
+@media (max-width: 640px) {
+  main {
+    width: 100%;
+    margin-inline: 0;
+    min-width: 0; /* flex 壳里不被长内容顶宽 */
+  }
+
+  /* 除对话区外，其余区块保持原来的版心宽度（视口 - 2rem） */
+  #workspace > :not(.chat) { margin-inline: 1rem; }
+
+  /* 对话区：通栏。负边距正好抵消 .panel 的左右 padding（同一个 clamp 值），
+     所以卡片里的标题、提示语、输入行仍保持原来的内缩，只有滚动区拉出去；
+     左右框线/圆角去掉，否则贴边会看到断角。上下 padding 与上下框线原样保留。
+     长中文兜一层，别撑出横向滚动条。 */
+  #chat-log {
+    margin-inline: calc(-1 * clamp(1rem, 4vw, 1.6rem) * var(--ui-spacing, 1));
+    padding-inline: 9px;
+    border-inline: 0;
+    border-radius: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* 气泡铺到内边距边界（原来是 88%） */
+  #chat-log .msg { max-width: 100%; }
+}
+
+/* Global liquid glass preset. The story can still supply its own cover image. */
+:root[data-ui-theme="liquid-glass"] {
+  --glass-rim: color-mix(in srgb, var(--rose) 42%, var(--panel));
+  --glass-surface: color-mix(in srgb, var(--panel) 87%, var(--base));
+  --glass-gloss: linear-gradient(155deg, #e4faff24, transparent 45%, #b19bff13);
+  --glass-shadow: inset 0 1px 0 #ebfbff57, inset 0 -1px 0 #a78dfb30, 0 10px 32px #02091c46;
+}
+
+:root[data-ui-theme="liquid-glass"][data-texture="glow"] body {
+  background:
+    radial-gradient(ellipse 44rem 25rem at 72% 8rem, color-mix(in srgb, var(--rose) 24%, transparent), transparent),
+    radial-gradient(ellipse 39rem 26rem at 13% 23rem, #8e7bfa39, transparent);
+}
+
+:root[data-ui-theme="liquid-glass"] body .overview {
+  background:
+    radial-gradient(ellipse at 96% 0, color-mix(in srgb, var(--rose) 31%, transparent), transparent 63%),
+    radial-gradient(ellipse at 82% 125%, #9c80fc50, transparent 63%),
+    var(--glass-gloss), var(--glass-surface);
+}
+
+:root[data-ui-theme="liquid-glass"] :is(.overview, .panel, .toolbar, dialog, .theme-sample) {
+  border-color: var(--glass-rim);
+  box-shadow: var(--glass-shadow);
+}
+
+:root[data-ui-theme="liquid-glass"] :is(.panel:where(:not(.chat)), .toolbar, dialog, .theme-sample) {
+  background: var(--glass-gloss), var(--glass-surface);
+}
+
+:root[data-ui-theme="liquid-glass"] .toolbar { position: relative; z-index: 1; }
+:root[data-ui-theme="liquid-glass"] .overview h1 { text-shadow: 0 2px 18px #030a1c82; }
+
+@supports (backdrop-filter: blur(1px)) {
+  :root[data-ui-theme="liquid-glass"] :is(.toolbar, dialog) {
+    background: var(--glass-gloss), color-mix(in srgb, var(--glass-surface) 80%, transparent);
+    backdrop-filter: blur(18px) saturate(1.35);
+  }
+}
+
+:root[data-ui-theme="liquid-glass"] :is(.save-slot, .prism-panels details),
+:root[data-ui-theme="liquid-glass"] body .route {
+  background: var(--glass-gloss), var(--glass-surface);
+  border-color: var(--glass-rim);
+  box-shadow: inset 0 1px 0 #ecf9ff2b;
+}
+
+:root[data-ui-theme="liquid-glass"] body .route:has(:checked),
+:root[data-ui-theme="liquid-glass"] .save-slot:not(.empty) {
+  border-color: var(--rose);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rose) 25%, transparent), 0 0 14px #86e9fa26;
+}
+
+:root[data-ui-theme="liquid-glass"] :is(.msg.assistant, .msg.user, .chat-input-row textarea) {
+  color: var(--text);
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-rim);
+}
+
+:root[data-ui-theme="liquid-glass"] .msg.user {
+  background: color-mix(in srgb, var(--glass-surface) 78%, var(--rose));
+}
+
+:root[data-ui-theme="liquid-glass"] :is(button):where(:not(#mobile-config-toggle)) {
+  background-image: linear-gradient(180deg, #ecfbff20, transparent 65%);
+  box-shadow: inset 0 1px 0 #edfbff45, 0 2px 5px #02091c38;
+}
+
+:root[data-ui-theme="liquid-glass"] :is(button.primary, .theme-sample span) {
+  background-image: linear-gradient(155deg, #ffffff35, transparent 48%, #9693ff20);
+  box-shadow: inset 0 1px 0 #ffffff82, 0 3px 12px #73d6ef37;
+}
+
+:root[data-ui-theme="liquid-glass"] [data-preset="liquid-glass"][aria-pressed="true"] {
+  border-color: var(--rose);
+  box-shadow: inset 0 1px 0 #edfbff45, 0 0 13px #86e9fa3b;
+}
+
+/* StyleKit presets share the app's components and keep the story's wallpaper. */
+:root[data-ui-theme="claymorphism"] {
+  --clay-mint: #a7f3d0;
+  --clay-lavender: #c4b5fd;
+  --material-card: linear-gradient(150deg, color-mix(in srgb, var(--panel) 68%, white), var(--panel));
+  --material-hero: linear-gradient(145deg, var(--red), var(--panel) 72%);
+  --material-raised: 5px 7px 15px #74516d25, inset 2px 3px 5px #fff9, inset -2px -3px 5px #936b7f25;
+  --material-inset: inset 3px 4px 8px #8e697f30, inset -2px -3px 5px #fffd;
+  --material-border: color-mix(in srgb, var(--text) 22%, var(--panel));
+}
+
+:root[data-ui-theme="holographic"] {
+  --holo-pink: #ff0080;
+  --holo-gold: #ffd700;
+  --holo-cyan: #00d4ff;
+  --holo-sheen: linear-gradient(145deg, #a855f72b, transparent 58%, #00d4ff18);
+  --material-card: var(--holo-sheen), var(--panel);
+  --material-hero: radial-gradient(ellipse at 95% 0, #ff00804c, transparent 64%),
+    radial-gradient(ellipse at 0 125%, #00d4ff47, transparent 62%), var(--material-card);
+  --material-raised: 0 6px 24px #04041775, inset 0 1px 0 #da9aff2b;
+  --material-inset: inset 0 2px 8px #0504188a;
+  --material-border: color-mix(in srgb, var(--rose) 41%, var(--panel));
+}
+
+:root[data-ui-theme="neumorphism"] {
+  --neo-coral: #ff6b6b;
+  --material-card: color-mix(in srgb, var(--base) 88%, var(--panel));
+  --material-hero: var(--material-card);
+  --material-raised: 5px 6px 12px #9ca8b77a, -4px -4px 11px #ffffffb3;
+  --material-inset: inset 3px 4px 8px #9ca8b783, inset -3px -4px 8px #ffffffb3;
+  --material-border: color-mix(in srgb, var(--text) 25%, var(--panel));
+}
+
+:root[data-ui-theme="claymorphism"][data-texture="glow"] body {
+  background: radial-gradient(ellipse at 92% 4rem, var(--clay-lavender), transparent 40rem),
+    radial-gradient(ellipse at 1% 21rem, var(--clay-mint), transparent 36rem);
+}
+
+:root[data-ui-theme="holographic"][data-texture="glow"] body {
+  background: radial-gradient(ellipse at 88% 6rem, #a855f73d, transparent 44rem),
+    radial-gradient(ellipse at 4% 24rem, #00d4ff26, transparent 39rem);
+}
+
+:root:is([data-ui-theme="claymorphism"], [data-ui-theme="holographic"], [data-ui-theme="neumorphism"]) :is(.overview, .panel, dialog, .theme-sample, .save-slot) {
+  border-color: var(--material-border);
+  box-shadow: var(--material-raised);
+}
+
+:root:is([data-ui-theme="claymorphism"], [data-ui-theme="holographic"], [data-ui-theme="neumorphism"]) :is(.toolbar, .panel:where(:not(.chat)), dialog, .theme-sample, .save-slot, .prism-panels details) {
+  background: var(--material-card);
+}
+
+:root:is([data-ui-theme="claymorphism"], [data-ui-theme="holographic"], [data-ui-theme="neumorphism"]) body .overview {
+  background: var(--material-hero);
+}
+
+:root:is([data-ui-theme="claymorphism"], [data-ui-theme="holographic"], [data-ui-theme="neumorphism"]) body .route {
+  background: var(--material-card);
+  border-color: var(--material-border);
+  box-shadow: var(--material-raised);
+}
+
+:root:is([data-ui-theme="claymorphism"], [data-ui-theme="holographic"], [data-ui-theme="neumorphism"]) body .route:has(:checked),
+:root:is([data-ui-theme="claymorphism"], [data-ui-theme="holographic"], [data-ui-theme="neumorphism"]) [data-preset][aria-pressed="true"] {
+  border-color: var(--rose);
+  box-shadow: var(--material-inset);
+}
+
+:root:is([data-ui-theme="claymorphism"], [data-ui-theme="holographic"], [data-ui-theme="neumorphism"]) :is(.msg.assistant, .msg.user) {
+  background: var(--material-card);
+  color: var(--text);
+  border: 1px solid var(--material-border);
+}
+
+:root:is([data-ui-theme="claymorphism"], [data-ui-theme="neumorphism"]) :is(button):where(:not(#mobile-config-toggle)) {
+  box-shadow: var(--material-raised);
+}
+
+:root:is([data-ui-theme="claymorphism"], [data-ui-theme="neumorphism"]) :is(button:active:not(:disabled), textarea, select, input:not([type=checkbox], [type=radio], [type=range], [type=color])) {
+  box-shadow: var(--material-inset);
+}
+
+:root[data-ui-theme="claymorphism"] :is(button):where(:not(#mobile-config-toggle)) {
+  border-radius: calc(var(--ui-radius) * .9);
+  background-image: linear-gradient(165deg, #ffffff55, transparent 64%);
+}
+:root[data-ui-theme="claymorphism"] .quick button:not(.primary) { background-color: var(--clay-mint); }
+:root[data-ui-theme="claymorphism"] .quick-roles button:not(.primary) { background-color: var(--clay-lavender); }
+
+:root[data-ui-theme="neumorphism"] button:where(:not(.primary, #mobile-config-toggle)) {
+  background-color: var(--base);
+  border-color: var(--material-border);
+}
+:root[data-ui-theme="neumorphism"] .save-slot:not(.empty) { border-top: 3px solid var(--neo-coral); }
+
+:root[data-ui-theme="holographic"] :is(.overview, dialog, .theme-sample) {
+  box-shadow: 0 0 0 1px #a855f754, 0 0 25px #a855f747, inset 0 1px 0 #00d4ff53;
+}
+:root[data-ui-theme="holographic"] .overview h1 {
+  background: linear-gradient(100deg, var(--text), var(--rose), var(--holo-cyan), var(--holo-gold));
+  background-clip: text;
+  color: transparent;
+}
+:root[data-ui-theme="holographic"] :is(button.primary, .theme-sample span) {
+  background-image: linear-gradient(110deg, var(--red), color-mix(in srgb, var(--red) 44%, var(--holo-pink)),
+    color-mix(in srgb, var(--red) 36%, var(--holo-cyan)), color-mix(in srgb, var(--red) 44%, var(--holo-gold)));
+  background-size: 160% 100%;
+  box-shadow: 0 2px 13px #a855f763;
+}
+:root[data-ui-theme="holographic"] button:not(.primary):where(:not(#mobile-config-toggle)) { background-image: var(--holo-sheen); }
+
+#theme-presets [data-preset="claymorphism"]::before { background: linear-gradient(135deg, #f8b4d9, #fef3c7, #a7f3d0, #c4b5fd); }
+#theme-presets [data-preset="holographic"]::before { background: linear-gradient(135deg, #a855f7, #ff0080, #ffd700); }
+#theme-presets [data-preset="neumorphism"]::before { background: linear-gradient(135deg, #d1d9e6, #6d5dfc); }
+
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-ui-theme="claymorphism"] button {
+    transition: transform .2s cubic-bezier(.2, 1.4, .55, 1), box-shadow .2s;
+  }
+  :root[data-ui-theme="claymorphism"] button:active:not(:disabled) { transform: scale(.98, .94); }
+  :root[data-ui-theme="holographic"] :is(button.primary) { transition: background-position .35s ease; }
+  :root[data-ui-theme="holographic"] :is(button.primary):hover { background-position: 100% 0; }
+}
+

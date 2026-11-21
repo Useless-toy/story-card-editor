@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
+  <title>角色剧本卡片编辑器</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./chat.css">
+  <script>
+    window.addEventListener('error', event => {
+      if (event.target instanceof HTMLScriptElement && event.target.type === 'module') {
+        const showNotice = () => { document.getElementById('startup-error').hidden = false }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', showNotice, { once: true })
+        else showNotice()
+      }
+    }, true)
+  </script>
+  <script type="module" src="./theme.js"></script>
+  <script type="module" src="./app.js"></script>
+  <script type="module" src="./chat.js"></script>
+</head>
+<body>
+  <header class="toolbar">
+    <div class="bar">
+      <div class="bar-group"><button id="library" type="button" aria-label="打开剧本库">☰</button><strong>剧本卡片</strong></div>
+      <div class="bar-group">
+        <button id="slots-shortcut" type="button" aria-label="打开共享存档">存档</button>
+        <button id="settings" type="button" aria-label="打开设置">⚙</button>
+      </div>
+    </div>
+  </header>
+  <div class="mobile-config" id="mobile-config">
+    <button id="mobile-config-toggle" type="button" aria-expanded="false" aria-controls="workspace">
+      <span id="mobile-config-title">剧本卡片</span>
+      <span class="mobile-config-caret" aria-hidden="true">▾</span>
+    </button>
+  </div>
+  <main>
+    <p id="startup-error" role="alert" hidden>页面组件加载失败。请用启动器停止并重新启动服务，然后刷新网页。</p>
+    <p id="notice" role="status"></p>
+    <div id="workspace" hidden>
+      <section class="overview" aria-labelledby="script-title">
+        <h1 id="script-title"></h1>
+        <p id="subtitle"></p>
+        <p id="hint" class="hint"></p>
+      </section>
+      <nav class="quick" id="quick" aria-label="剧本资料"></nav>
+
+      <details class="panel" id="world-editor">
+        <summary>世界观设定</summary>
+        <form id="world-form">
+          <label>地点<textarea id="world-place" rows="2"></textarea></label>
+          <label>时长<input id="world-duration"></label>
+          <label>规则<textarea id="world-rule" rows="4"></textarea></label>
+          <div class="edit-actions">
+            <button id="reset-world" type="button">从当前剧本重置</button>
+            <button type="submit">应用修改</button>
+          </div>
+          <p id="world-error" role="alert"></p>
+        </form>
+      </details>
+      <section class="panel" id="profile">
+        <h2><span>01</span> 玩家档案定制</h2>
+        <div id="fields" class="fields"></div>
+        <button id="random" type="button">🎲 随机生成档案</button>
+        <label class="special">
+          <input id="special" type="checkbox">
+          <span><strong id="toggle-title"></strong><small id="toggle-description"></small></span>
+        </label>
+      </section>
+      <section class="panel" id="opening-routes">
+        <h2><span>02</span> 选择开局路线</h2>
+        <fieldset id="routes"><legend class="sr-only">选择一条路线</legend></fieldset>
+        <button id="add-route" type="button">＋ 新增路线</button>
+        <label id="custom-label" hidden><span id="custom-caption">自由开场</span><textarea id="custom" rows="5" placeholder="从你想要的第一幕开始写"></textarea></label>
+      </section>
+      <details class="panel read-panel" id="world-panel">
+        <summary id="world-panel-title">世界观</summary>
+        <div class="read-content" id="world-panel-text"></div>
+      </details>
+      <details class="panel read-panel" id="memory-panel">
+        <summary>记忆区</summary>
+        <div class="read-content" id="memory-text"></div>
+      </details>
+      <section class="panel preview">
+        <p id="compile-error" role="alert"></p>
+        <details id="opening-preview" open>
+          <summary>首轮发送内容预览</summary>
+          <p class="muted">已包含世界观、角色档案、初始数值与状态栏格式。</p>
+          <pre id="output" tabindex="0" aria-label="编译结果"></pre>
+        </details>
+        <div class="edit-actions">
+          <button class="primary" id="start" type="button">▶ 开始游戏</button>
+          <button id="copy" type="button">复制开局设定</button>
+        </div>
+        <p id="copy-status" role="status"></p>
+      </section>
+      <section class="panel chat" aria-labelledby="chat-title">
+        <h2 id="chat-title">对话</h2>
+        <p class="muted" id="chat-hint">点上面的「开始游戏」，初始设定会直接发出去，之后在这里一直聊下去。</p>
+        <div id="chat-log" class="chat-log" aria-live="polite"></div>
+        <div class="choice-bar" id="choices" aria-label="分支选项" hidden></div>
+        <div class="chat-input-row">
+          <textarea id="chat-input" rows="2" placeholder="说点什么，或者点上面的选项"></textarea>
+          <button class="primary" id="chat-send" type="button">发送</button>
+        </div>
+        <p id="chat-status" role="status"></p>
+      </section>
+    </div>
+  </main>
+  <dialog id="save-slots-dialog" aria-labelledby="save-slots-title">
+    <form method="dialog" class="dialog-heading"><h2 id="save-slots-title">共享存档</h2><button aria-label="关闭存档">×</button></form>
+    <p class="muted">连接此服务的设备共用下方 16 个槽位。</p>
+    <div class="edit-actions">
+      <button id="slot-refresh" type="button">刷新槽位</button>
+      <button id="slot-import" type="button">从文件导入到槽位</button>
+      <button id="slot-legacy" type="button">迁移此设备的旧档</button>
+      <button id="slot-import-cancel" type="button" hidden>取消导入</button>
+      <input id="slot-file" type="file" accept=".json,.txt,application/json,text/plain" hidden>
+    </div>
+    <div id="slot-legacy-picker" hidden>
+      <label>此设备的旧槽位 <select id="slot-legacy-select"></select></label>
+      <button id="slot-legacy-pick" type="button">选中并迁移</button>
+    </div>
+    <p id="slots-status" role="status"></p>
+    <div id="slots-grid" class="save-slots-grid" aria-label="存档槽位"></div>
+  </dialog>
+  <dialog id="drawer" class="drawer" aria-labelledby="drawer-title">
+    <form method="dialog" class="dialog-heading"><h2 id="drawer-title">剧本库</h2><button aria-label="关闭">×</button></form>
+    <div id="entries"></div>
+    <div class="drawer-actions">
+      <button id="new" type="button">新建草稿</button>
+      <button id="import" type="button">导入 JSON</button>
+      <button id="export" type="button">导出当前剧本</button>
+      <input id="file" type="file" accept=".json,application/json" hidden>
+    </div>
+    <p id="drawer-status" role="status"></p>
+  </dialog>
+  <dialog id="route-editor" aria-labelledby="route-editor-title">
+    <form method="dialog" class="dialog-heading"><h2 id="route-editor-title">编辑路线</h2><button aria-label="关闭">×</button></form>
+    <form id="route-form">
+      <label class="stack">路线名称<input id="route-name" required></label>
+      <label class="stack">场景文字<textarea id="route-scene" rows="5" required></textarea></label>
+      <div id="route-stats"></div>
+      <p id="route-error" role="alert"></p>
+      <button class="primary" type="submit">保存路线</button>
+    </form>
+  </dialog>
+  <dialog id="detail" aria-labelledby="detail-title">
+    <form method="dialog" class="dialog-heading"><h2 id="detail-title"></h2><button aria-label="关闭">×</button></form>
+    <div id="detail-body"></div>
+  </dialog>
+  <dialog id="theme-dialog" aria-labelledby="theme-title">
+    <form id="theme-form">
+      <div class="dialog-heading">
+        <h2 id="theme-title">主题工作台</h2>
+        <button id="theme-cancel" type="button" aria-label="关闭主题设置">×</button>
+      </div>
+      <div class="theme-sample" aria-hidden="true"><strong>剧本卡片</strong><small>文字与面板预览</small><span>主按钮</span></div>
+      <p class="muted">预设适用于所有剧本。选中即可预览，也可以再调整颜色与版式。</p>
+      <div id="theme-presets" class="theme-actions" aria-label="主题预设"></div>
+      <div id="theme-controls"></div>
+      <div class="theme-actions">
+        <button id="wallpaper-upload" type="button">上传灯塔壁纸</button>
+        <input id="wallpaper-file" type="file" accept="image/jpeg,image/png,image/webp,image/avif" hidden>
+      </div>
+      <div class="theme-actions">
+        <button id="theme-reset" type="button">恢复默认</button>
+        <button id="theme-import" type="button">导入 JSON</button>
+        <button id="theme-export" type="button">导出 JSON</button>
+        <button class="primary" type="submit">保存主题</button>
+        <input id="theme-file" type="file" accept=".json,application/json" hidden>
+      </div>
+      <p id="theme-status" role="status"></p>
+    </form>
+  </dialog>
+  <dialog id="settings-dialog" aria-labelledby="settings-title">
+    <form method="dialog" class="dialog-heading"><h2 id="settings-title">设置</h2><button aria-label="关闭设置">×</button></form>
+    <section class="settings-section" aria-labelledby="settings-model-title">
+      <h3 id="settings-model-title">模型</h3>
+      <label class="model">目标模型 <select id="model"><option value="">未指定（默认 deepseek-flash）</option><option>deepseek-flash</option><option>deepseek-v4-pro</option></select></label>
+      <div class="edit-actions"><button id="model-custom" type="button">自定义模型名…</button></div>
+    </section>
+    <section class="settings-section" aria-labelledby="settings-theme-title">
+      <h3 id="settings-theme-title">外观</h3>
+      <div class="edit-actions"><button id="theme-open" type="button" aria-label="打开主题工作台">主题</button></div>
+    </section>
+    <section class="settings-section" aria-labelledby="settings-library-title">
+      <h3 id="settings-library-title">剧本库</h3>
+      <div class="edit-actions"><button id="history" type="button" aria-label="查看本地历史">历史</button></div>
+    </section>
+    <section class="settings-section" aria-labelledby="settings-chat-title">
+      <h3 id="settings-chat-title">对话操作</h3>
+      <div class="edit-actions">
+        <button id="chat-reset" type="button">清空对话</button>
+        <button id="chat-export" type="button">导出记录</button>
+        <button id="chat-export-novel" type="button" title="只留正文，去掉思考、面板、账本和选项">导出正文</button>
+        <button id="chat-slots" type="button">存档</button>
+        <button id="chat-save" type="button">导出文件</button>
+        <button id="chat-load" type="button">导入续玩</button>
+        <input id="chat-save-file" type="file" accept=".json,.txt,application/json,text/plain" hidden>
+      </div>
+    </section>
+  </dialog>
+</body>
+</html>
+
+
+
