@@ -7,6 +7,10 @@ import { checkStaticRoutes } from './lib/static-check.mjs'
 import { createSharedSaves, SaveSlotError } from './lib/shared-saves.mjs'
 
 const port = Number(process.env.PORT) || 18769
+// 默认只绑本机。存档是明文 JSON，绑 0.0.0.0 等于把整台机器的故事和存档摊给同一 Wi-Fi 的
+// 所有人——不需要任何密码就能读。要手机连，显式加 --lan（或设 STORY_LAN=1）。
+const lanEnabled = process.argv.includes('--lan') || process.env.STORY_LAN === '1'
+const bindHost = lanEnabled ? '0.0.0.0' : '127.0.0.1'
 const host = '127.0.0.1'
 const url = 'http://' + host + ':' + port + '/'
 const sharedSaves = createSharedSaves(fileURLToPath(new URL('./data/shared-saves/', import.meta.url)))
@@ -235,10 +239,11 @@ async function handleChat(request, response) {
 
 const server = createServer(async (request, response) => {
   const hostHeader = request.headers.host
-  // 原来是一份死名单（127.0.0.1 / localhost）：手机用局域网 IP 进来会直接 403。
-  // 放宽到私有网段——外部域名照样进不来（DNS rebinding 仍然挡得住），但 LAN 能通；
-  // 100.64/10 顺带给 Tailscale 留着。
-  const privateHost = /^(?:127\.0\.0\.1|localhost|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}|100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.\d{1,3}\.\d{1,3})(?::\d+)?$/i
+  // Host 白名单：没开 --lan 时只认本机；开了才放行私有网段（外部域名照样进不来，
+  // DNS rebinding 仍然挡得住）。100.64/10 给 Tailscale 留着。
+  const privateHost = lanEnabled
+    ? /^(?:127\.0\.0\.1|localhost|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}|100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.\d{1,3}\.\d{1,3})(?::\d+)?$/i
+    : /^(?:127\.0\.0\.1|localhost)(?::\d+)?$/i
   if (!privateHost.test(hostHeader ?? '')) {
     return response.writeHead(403).end()
   }
@@ -284,12 +289,17 @@ server.on('error', error => {
   process.exitCode = 1
 })
 
-// 绑 0.0.0.0：手机（同一 Wi-Fi）要能从局域网进来；只绑 127.0.0.1 时外部连不上。
-server.listen(port, '0.0.0.0', async () => {
+// 默认只监听 127.0.0.1。--lan 才绑 0.0.0.0（手机同 Wi-Fi 连进来用）。
+server.listen(port, bindHost, async () => {
   console.log('角色剧本卡片编辑器 + 对话 ' + url)
-  const lan = Object.values(networkInterfaces()).flat()
-    .find(item => item && item.family === 'IPv4' && !item.internal)?.address
-  if (lan) console.log('手机（同一 Wi-Fi）→ http://' + lan + ':' + port + '/')
+  if (!lanEnabled) {
+    console.log('只监听本机。手机要走局域网的话，加 --lan 重启（同 Wi-Fi 的人将能打开这个页面、读到存档）')
+  } else {
+    const lan = Object.values(networkInterfaces()).flat()
+      .find(item => item && item.family === 'IPv4' && !item.internal)?.address
+    if (lan) console.log('手机（同一 Wi-Fi）→ http://' + lan + ':' + port + '/')
+    console.log('⚠ 局域网已开：同一 Wi-Fi 下的任何人都能打开上面这个地址、读你的存档。不用时请关掉。')
+  }
   console.log('模型通道：由浏览器填入（服务端不读取任何本机凭据）')
   const routeWarnings = await checkStaticRoutes(files, file => readFile(new URL('./' + file, import.meta.url), 'utf8'))
   for (const warning of routeWarnings) console.warn('[路由自检] ' + warning)
