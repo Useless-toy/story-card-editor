@@ -12,3 +12,9 @@ data/save-slots/
 .DS_Store
 Thumbs.db
 *.log
+
+# 本地备份与临时产物
+*.bak-*
+*.bak
+_work/
+
