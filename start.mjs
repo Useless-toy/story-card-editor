@@ -115,22 +115,71 @@ async function handleSaveSlots(request, response, path) {
   }
 }
 
+// ---------- /api/credentials ----------
+// 电脑端的网页把 key 交到这里，好让手机端打开同一个服务时不必再填一次。
+// 只在内存里：不落盘、不写日志、不进存档；进程一退出就没了。
+// 写入只允许本机来源（手机只能借、不能改）。
+let sharedCredentials = null
+
+function isLoopback(request) {
+  const address = request.socket?.remoteAddress || ''
+  return address === '127.0.0.1' || address === '::1' || address === '::ffff:127.0.0.1'
+}
+
+async function handleCredentials(request, response) {
+  if (!isLoopback(request)) {
+    return json(response, 403, { error: '只有运行服务的这台电脑能改凭据。手机端不需要填，直接用电脑上的那份。' })
+  }
+
+  if (request.method === 'DELETE') {
+    sharedCredentials = null
+    return json(response, 200, { ok: true, hasKey: false })
+  }
+
+  let payload
+  try {
+    payload = JSON.parse((await readBody(request)) || '{}')
+  } catch (error) {
+    return json(response, 400, { error: '请求体不是合法 JSON：' + error.message })
+  }
+
+  const key = typeof payload.key === 'string' ? payload.key.trim() : ''
+  const endpoint = typeof payload.endpoint === 'string' ? payload.endpoint.trim() : ''
+  const model = typeof payload.model === 'string' ? payload.model.trim() : ''
+
+  if (!key && !endpoint) {
+    sharedCredentials = null
+    return json(response, 200, { ok: true, hasKey: false })
+  }
+
+  sharedCredentials = {
+    key,
+    endpoint: resolveEndpoint(endpoint) ?? DEFAULT_ENDPOINT,
+    model
+  }
+  return json(response, 200, { ok: true, hasKey: Boolean(key) })
+}
+
 // ---------- POST /api/chat ----------
 // 请求：{ messages: [{role, content}], model?, maxTokens? }
 // 响应：纯文本流。上游的 reasoning_content 已被丢弃，只转发正文。
 
 async function handleChat(request, response) {
-  // 凭据只从这一条请求里来：浏览器带上来的 Authorization 头。
-  // 服务端不缓存、不落盘、不读本机任何文件；请求结束即丢。
+  // 凭据来源有两处，按顺序取：
+  //   1. 这条请求自己带的 Authorization 头（电脑端网页，存在 localStorage 里）
+  //   2. 内存里由电脑端交上来的那份（手机端什么都不用填）
   const authorization = request.headers.authorization || ''
-  const apiKey = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : ''
+  const headerKey = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : ''
+  const apiKey = headerKey || sharedCredentials?.key || ''
   if (!apiKey) {
     return json(response, 401, {
-      error: '没有 API Key。点右上角 ⚙ 打开设置，把 key 填进去——它只存在你自己的浏览器里。'
+      error: '还没有 API Key。在电脑上打开这个页面，右上角 ⚙ 里填一次；手机端不用填，填完这台电脑就带着手机一起用了。'
     })
   }
 
   const endpoint = resolveEndpoint(request.headers['x-model-endpoint'])
+    ?? sharedCredentials?.endpoint
+    ?? resolveEndpoint(DEFAULT_ENDPOINT)
   if (!endpoint) {
     return json(response, 400, { error: 'API 地址无效，需要 http:// 或 https:// 开头的完整地址。' })
   }
@@ -253,6 +302,13 @@ const server = createServer(async (request, response) => {
     return handleSaveSlots(request, response, path)
   }
 
+  if (path === '/api/credentials') {
+    if (!['POST', 'DELETE'].includes(request.method)) {
+      return response.writeHead(405, { Allow: 'POST, DELETE' }).end()
+    }
+    return handleCredentials(request, response)
+  }
+
   if (path === '/api/chat') {
     if (request.method !== 'POST') {
       return response.writeHead(405, { Allow: 'POST' }).end()
@@ -261,7 +317,11 @@ const server = createServer(async (request, response) => {
   }
 
   if (path === '/api/health') {
-    return json(response, 200, { ok: true })
+    return json(response, 200, {
+      ok: true,
+      hasKey: Boolean(sharedCredentials?.key),
+      model: sharedCredentials?.model || ''
+    })
   }
 
   if (!['GET', 'HEAD'].includes(request.method)) {

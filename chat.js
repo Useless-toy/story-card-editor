@@ -270,16 +270,16 @@ async function submit() {
 
 async function requestTurn(messages, onProgress) {
   const { key, endpoint, model } = readCredentials()
-  if (!key.trim()) {
-    throw new Error('还没有填 API Key。点右上角 ⚙，在「模型」里填好 key 再开始——它只存在你自己的浏览器里。')
+  // 本机没填就不带凭据照样发：服务端内存里可能有电脑上填过的那份，
+  // 手机端就是靠这条路径免填的。两边都没有，服务端会回 401。
+  const headers = { 'Content-Type': 'application/json' }
+  if (key.trim()) {
+    headers['Authorization'] = 'Bearer ' + key.trim()
+    headers['x-model-endpoint'] = endpoint.trim() || DEFAULT_ENDPOINT
   }
   const response = await fetch('./api/chat', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + key.trim(),
-      'x-model-endpoint': endpoint.trim() || DEFAULT_ENDPOINT
-    },
+    headers,
     body: JSON.stringify({ messages, maxTokens: 6000, model: model || document.getElementById('model')?.value || undefined })
   })
   if (!response.ok) {

@@ -55,3 +55,42 @@ export function maskKey(key) {
   if (text.length <= 10) return text.slice(0, 2) + '…'
   return text.slice(0, 5) + '…' + text.slice(-4)
 }
+
+// ---------- 让同一个服务下的其它设备（手机）不用再填 ----------
+//
+// 交给服务端的内存，不是文件：不落盘、不写日志、不进存档，进程退出就没了。
+// 服务端只接受来自本机的写入，所以手机端调用会被 403——它也不需要调用。
+// 手机第一次打开时服务端内存里若还没有，就在电脑上打开一次页面（会自动推）。
+export async function pushCredentials() {
+  const current = readCredentials()
+  if (!current.key && !current.endpoint) return { ok: false, skipped: true }
+  try {
+    const response = await fetch('./api/credentials', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(current)
+    })
+    return await response.json().catch(() => ({ ok: response.ok }))
+  } catch {
+    return { ok: false }
+  }
+}
+
+export async function pushClear() {
+  try {
+    const response = await fetch('./api/credentials', { method: 'DELETE' })
+    return await response.json().catch(() => ({ ok: response.ok }))
+  } catch {
+    return { ok: false }
+  }
+}
+
+export async function serverHasKey() {
+  try {
+    const response = await fetch('./api/health', { cache: 'no-store' })
+    const data = await response.json()
+    return Boolean(data?.hasKey)
+  } catch {
+    return false
+  }
+}

@@ -1,6 +1,6 @@
 import { compile, createDraft, customRequest, panelConfigOf, prismRequest, startLedger, validateRoutes, validateScript } from './compiler.mjs'
 import { splitChoices } from './lib/choices.mjs'
-import { DEFAULT_ENDPOINT, clearCredentials, maskKey, readCredentials, saveCredentials } from './credentials.js'
+import { DEFAULT_ENDPOINT, clearCredentials, maskKey, pushClear, pushCredentials, readCredentials, saveCredentials, serverHasKey } from './credentials.js'
 
 const storageKey = 'story-card-editor.v1'
 const el = id => document.getElementById(id)
@@ -359,17 +359,23 @@ el('settings').addEventListener('click', () => {
 
 const currentModel = () => (draft?.selectedModel || readCredentials().model || '')
 
-function reflectCredentialState() {
+async function reflectCredentialState() {
   const state = el('api-state')
   if (!state) return
   const { key, endpoint } = readCredentials()
   if (key.trim()) {
-    state.textContent = '已填入 ' + maskKey(key) + '，发往 ' + (endpoint.trim() || DEFAULT_ENDPOINT) + '。'
+    state.textContent = '已填入 ' + maskKey(key) + '，发往 ' + (endpoint.trim() || DEFAULT_ENDPOINT) + '。同一网络的手机不用再填。'
     state.dataset.state = 'ok'
-  } else {
-    state.textContent = '还没有填 API Key。填好之后才能开始对话。'
-    state.dataset.state = 'empty'
+    return
   }
+  // 本机没填过：看看服务端内存里有没有（电脑上填过，这台设备就能直接用）。
+  if (await serverHasKey()) {
+    state.textContent = '这台设备不用填：正用着电脑上填好的 key。'
+    state.dataset.state = 'ok'
+    return
+  }
+  state.textContent = '还没有 API Key。在任何一台电脑上填一次，手机端就不用再填。'
+  state.dataset.state = 'empty'
 }
 
 function loadCredentialFields() {
@@ -391,16 +397,19 @@ function loadCredentialFields() {
   reflectCredentialState()
 }
 
-el('api-endpoint')?.addEventListener('blur', event => {
+el('api-endpoint')?.addEventListener('blur', async event => {
   saveCredentials({ endpoint: event.target.value.trim() })
+  await pushCredentials()
   reflectCredentialState()
 })
-el('api-key')?.addEventListener('blur', event => {
+el('api-key')?.addEventListener('blur', async event => {
   saveCredentials({ key: event.target.value.trim() })
+  await pushCredentials()
   reflectCredentialState()
 })
-el('api-clear')?.addEventListener('click', () => {
+el('api-clear')?.addEventListener('click', async () => {
   clearCredentials()
+  await pushClear()
   loadCredentialFields()
 })
 el('api-test')?.addEventListener('click', async () => {
@@ -605,6 +614,12 @@ async function initialize() {
 }
 
 initialize()
+
+// 页面一打开就把本机的 key 递一份给服务端的内存，好在服务重启之后
+// 手机端还能直接用。递的是玩家自己填过的东西，不是去翻本机凭据。
+if (readCredentials().key.trim()) {
+  pushCredentials().then(() => reflectCredentialState()).catch(() => {})
+}
 
 
 
