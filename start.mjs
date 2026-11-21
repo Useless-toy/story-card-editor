@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { readFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { createServer } from 'node:http'
 import { networkInterfaces } from 'node:os'
 import { fileURLToPath } from 'node:url'
@@ -117,9 +117,44 @@ async function handleSaveSlots(request, response, path) {
 
 // ---------- /api/credentials ----------
 // 电脑端的网页把 key 交到这里，好让手机端打开同一个服务时不必再填一次。
-// 只在内存里：不落盘、不写日志、不进存档；进程一退出就没了。
+//
+// 存在 data/credentials.json，重启不丢。这不是「程序自己去翻凭据」——
+// 文件里只有你亲手在网页上填过的那一份，位置在本项目自己的 data 下，
+// 不读环境变量、不翻 ~/.dsh、不扫盘。删掉这个文件或点「清除本机凭据」就没了。
 // 写入只允许本机来源（手机只能借、不能改）。
+const CREDENTIALS_DIR = new URL('./data/', import.meta.url)
+const CREDENTIALS_FILE = new URL('./data/credentials.json', import.meta.url)
+
 let sharedCredentials = null
+
+async function loadSharedCredentials() {
+  try {
+    const parsed = JSON.parse(await readFile(CREDENTIALS_FILE, 'utf8'))
+    const key = typeof parsed.key === 'string' ? parsed.key.trim() : ''
+    if (!key) return null
+    return {
+      key,
+      endpoint: resolveEndpoint(parsed.endpoint) ?? DEFAULT_ENDPOINT,
+      model: typeof parsed.model === 'string' ? parsed.model.trim() : ''
+    }
+  } catch {
+    return null
+  }
+}
+
+async function saveSharedCredentials(value) {
+  try {
+    if (!value || !value.key) {
+      await rm(CREDENTIALS_FILE, { force: true })
+      return
+    }
+    await mkdir(CREDENTIALS_DIR, { recursive: true })
+    const body = JSON.stringify({ key: value.key, endpoint: value.endpoint, model: value.model }, null, 2)
+    await writeFile(CREDENTIALS_FILE, body, { encoding: 'utf8', mode: 0o600 })
+  } catch (error) {
+    console.error('凭据没能写入 data/credentials.json：' + error.message)
+  }
+}
 
 function isLoopback(request) {
   const address = request.socket?.remoteAddress || ''
@@ -133,6 +168,7 @@ async function handleCredentials(request, response) {
 
   if (request.method === 'DELETE') {
     sharedCredentials = null
+    await saveSharedCredentials(null)
     return json(response, 200, { ok: true, hasKey: false })
   }
 
@@ -149,6 +185,7 @@ async function handleCredentials(request, response) {
 
   if (!key && !endpoint) {
     sharedCredentials = null
+    await saveSharedCredentials(null)
     return json(response, 200, { ok: true, hasKey: false })
   }
 
@@ -157,6 +194,7 @@ async function handleCredentials(request, response) {
     endpoint: resolveEndpoint(endpoint) ?? DEFAULT_ENDPOINT,
     model
   }
+  await saveSharedCredentials(sharedCredentials)
   return json(response, 200, { ok: true, hasKey: Boolean(key) })
 }
 
@@ -349,6 +387,9 @@ server.on('error', error => {
   process.exitCode = 1
 })
 
+// 启动时把上次保存的凭据读回来（只读本项目自己 data 下的那一份）。
+sharedCredentials = await loadSharedCredentials()
+
 // 默认只监听 127.0.0.1。--lan 才绑 0.0.0.0（手机同 Wi-Fi 连进来用）。
 server.listen(port, bindHost, async () => {
   console.log('角色剧本卡片编辑器 + 对话 ' + url)
@@ -360,7 +401,9 @@ server.listen(port, bindHost, async () => {
     if (lan) console.log('手机（同一 Wi-Fi）→ http://' + lan + ':' + port + '/')
     console.log('⚠ 局域网已开：同一 Wi-Fi 下的任何人都能打开上面这个地址、读你的存档。不用时请关掉。')
   }
-  console.log('模型通道：由浏览器填入（服务端不读取任何本机凭据）')
+  console.log('模型通道：' + (sharedCredentials?.key
+    ? '已载入 data/credentials.json 里保存的凭据（手机端不用填）'
+    : '等你在网页右上角 ⚙ 里填一次'))
   const routeWarnings = await checkStaticRoutes(files, file => readFile(new URL('./' + file, import.meta.url), 'utf8'))
   for (const warning of routeWarnings) console.warn('[路由自检] ' + warning)
   if (process.argv.includes('--no-open')) return
