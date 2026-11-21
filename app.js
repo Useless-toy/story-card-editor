@@ -70,6 +70,15 @@ function worldText(setting) {
   return ['地点：' + setting.place, '时长：' + setting.duration, '规则：' + setting.rule].join('\n')
 }
 
+function escapeHtml(text) {
+  return String(text).replace(/[&<>]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[ch])
+}
+
+// 预览里的 **加粗** 只影响显示：内容仍逐字、不省略，只是不把星号当正文给人看。
+function emphasize(text) {
+  return escapeHtml(text).replace(/\*\*([^*\n]{1,60})\*\*/g, '<strong>$1</strong>')
+}
+
 function update() {
   const route = availableRoutes().find(route => route.id === draft.routeId)
   el('custom-label').hidden = !route?.custom
@@ -83,7 +92,7 @@ function update() {
     const request = script.turnPanels === 'prism'
       ? prismRequest([{ role:'user', content:fullText }], new Map(), script.prismStats ? startLedger(script.prismStats, script.fans ?? []) : null, {recent:[],archive:[],nextId:1})
       : customRequest([], new Map(), null, panelConfigOf(script), fullText)
-    el('output').textContent = request[0].content
+    el('output').innerHTML = emphasize(request[0].content)
     {
       const note = document.querySelector('#opening-preview .muted')
       if (note) {

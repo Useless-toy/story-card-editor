@@ -56,7 +56,9 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .route:has(:checked) { border-color: var(--rose); background: color-mix(in srgb, var(--rose) 12%, var(--panel)); }
 .route input { align-self: start; margin-top: .45rem; }
 .route p { margin: .35rem 0 0; color: var(--muted); }
-pre { white-space: pre-wrap; overflow-wrap: anywhere; overflow-y: auto; max-height: 25rem; padding: 1rem; background: var(--base); border: 1px solid var(--line); border-radius: calc(var(--ui-radius, 14px) * .75); font: .87rem/1.7 ui-monospace, Consolas, monospace; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; overflow-y: auto; max-height: calc(.87rem * 1.7 * 16 + 2rem + 2px); padding: 1rem; background: var(--base); border: 1px solid var(--line); border-radius: calc(var(--ui-radius, 14px) * .75); font: .87rem/1.7 ui-monospace, Consolas, monospace; scrollbar-width: thin; scrollbar-color: var(--line) transparent; overscroll-behavior: contain; }
+pre strong { color: var(--rose); font-weight: 700; }
+::placeholder { color: var(--muted); opacity: .9; }
 button.primary { background: var(--red); color: var(--button-ink, white); border-color: color-mix(in srgb, var(--red), var(--rose) 32%); font-weight: 700; }
 .preview .primary { width: 100%; }
 [role=status] { color: var(--rose); margin: .5rem 0 0; }
