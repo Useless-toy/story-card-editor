@@ -50,7 +50,7 @@ test('rejects invalid route stats', () => {
 })
 
 test('legacy scripts migrate and preserve route numbers without modifying the JSON files', async () => {
-  for (const rel of ['./fixtures/minimal.json', '../scripts/apartment.json']) {
+  for (const rel of ['./fixtures/minimal.json', '../scripts/rent-room.json']) {
     const original = JSON.parse(await readFile(new URL(rel, import.meta.url)))
     const expected = original.routes[0].stats[original.roles[0].id]
     const migrated = validateScript(original)
